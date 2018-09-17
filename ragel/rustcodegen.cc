@@ -1310,7 +1310,7 @@ string RustTabCodeGen::ARR_OFF( string ptr, string offset )
 string RustTabCodeGen::NULL_ITEM()
 {
 	/* In rust we use integers instead of pointers. */
-	return "-1";
+	return "usize::MAX";
 }
 
 string RustTabCodeGen::GET_KEY()
