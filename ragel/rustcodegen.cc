@@ -36,6 +36,8 @@
 #define _test_eof  4
 #define _out       5
 
+#define INT_TYPE "usize"
+
 using std::setw;
 using std::ios;
 using std::ostringstream;
@@ -151,7 +153,7 @@ void RustTabCodeGen::RET( ostream &ret, bool inFinish )
 	ret <<
 		"{\n"
 		"    " << TOP() << " -= 1;\n"
-		"    " << vCS() << " = " << STACK() << "[" << TOP() << "] as int;";
+		"    " << vCS() << " = " << STACK() << "[" << TOP() << "] as " INT_TYPE ";";
 
 	if ( postPopExpr != 0 ) {
 		ret << "    {";
@@ -326,12 +328,12 @@ void RustTabCodeGen::COND_TRANSLATE()
 {
 	out <<
 		"            _widec = " << GET_KEY() << ";\n"
-		"            _keys = " << CO() << "[" << vCS() << "] as int * 2\n;"
-		"            _klen = " << CL() << "[" << vCS() << "] as int;\n"
+		"            _keys = " << CO() << "[" << vCS() << "] as " INT_TYPE " * 2\n;"
+		"            _klen = " << CL() << "[" << vCS() << "] as " INT_TYPE ";\n"
 		"            if _klen > 0 {\n"
-		"                let mut _lower: int = _keys\n;"
-		"                let mut _mid: int;\n"
-		"                let mut _upper: int = _keys + (_klen<<1) - 2;\n"
+		"                let mut _lower: " INT_TYPE " = _keys\n;"
+		"                let mut _mid: " INT_TYPE ";\n"
+		"                let mut _upper: " INT_TYPE " = _keys + (_klen<<1) - 2;\n"
 		"                loop {\n"
 		"                if _upper < _lower { break; }\n"
 		"\n"
@@ -377,13 +379,13 @@ void RustTabCodeGen::LOCATE_TRANS()
 {
 	out <<
 		"            '_match: loop {\n"
-		"                _keys = " << KO() << "[" << vCS() << "] as int;\n"
-		"                _trans = " << IO() << "[" << vCS() << "] as int;\n"
-		"                _klen = " << SL() << "[" << vCS() << "] as int;\n"
+		"                _keys = " << KO() << "[" << vCS() << "] as " INT_TYPE ";\n"
+		"                _trans = " << IO() << "[" << vCS() << "] as " INT_TYPE ";\n"
+		"                _klen = " << SL() << "[" << vCS() << "] as " INT_TYPE ";\n"
 		"                if _klen > 0 {\n"
-		"                    let mut _lower: int = _keys;\n"
-		"                    let mut _mid: int;\n"
-		"                    let mut _upper: int = _keys + _klen - 1;\n"
+		"                    let mut _lower: " INT_TYPE " = _keys;\n"
+		"                    let mut _mid: " INT_TYPE ";\n"
+		"                    let mut _upper: " INT_TYPE " = _keys + _klen - 1;\n"
 		"                    loop {\n"
 		"                        if _upper < _lower { break; }\n"
 		"\n"
@@ -401,10 +403,10 @@ void RustTabCodeGen::LOCATE_TRANS()
 		"                    _trans += _klen;\n"
 		"                }\n"
 		"\n"
-		"                _klen = " << RL() << "[" << vCS() << "] as int;\n"
+		"                _klen = " << RL() << "[" << vCS() << "] as " INT_TYPE ";\n"
 		"                if _klen > 0 {\n"
 		"                    let mut _lower = _keys;\n"
-		"                    let mut _mid: int;\n"
+		"                    let mut _mid: " INT_TYPE ";\n"
 		"                    let mut _upper = _keys + (_klen<<1) - 2;\n"
 		"                    loop {\n"
 		"                        if _upper < _lower { break; }\n"
@@ -1012,19 +1014,19 @@ void RustTabCodeGen::writeData()
 	}
 
 	if ( redFsm->startState != 0 )
-		STATIC_VAR( "int", START() ) << " = " << START_STATE_ID() << ";\n";
+		STATIC_VAR( INT_TYPE, START() ) << " = " << START_STATE_ID() << ";\n";
 
 	if ( !noFinal )
-		STATIC_VAR( "int" , FIRST_FINAL() ) << " = " << FIRST_FINAL_STATE() << ";\n";
+		STATIC_VAR( INT_TYPE , FIRST_FINAL() ) << " = " << FIRST_FINAL_STATE() << ";\n";
 
 	if ( !noError )
-		STATIC_VAR( "int", ERROR() ) << " = " << ERROR_STATE() << ";\n";
-	
+		STATIC_VAR( INT_TYPE, ERROR() ) << " = " << ERROR_STATE() << ";\n";
+
 	out << "\n";
 
 	if ( entryPointNames.length() > 0 ) {
 		for ( EntryNameVect::Iter en = entryPointNames; en.lte(); en++ ) {
-			STATIC_VAR( "int", DATA_PREFIX() + "en_" + *en ) <<
+			STATIC_VAR( INT_TYPE, DATA_PREFIX() + "en_" + *en ) <<
 					" = " << entryPointIds[en.pos()] << ";\n";
 		}
 		out << "\n";
@@ -1041,29 +1043,29 @@ void RustTabCodeGen::writeExec()
 	}
 
   out <<
-		"    let mut _klen: int;\n";
+		"    let mut _klen: " INT_TYPE ";\n";
 
 	if ( redFsm->anyRegCurStateRef() )
-		out << "    let _ps: int;\n";
+		out << "    let _ps: " INT_TYPE ";\n";
 
 	out << "    let mut _trans = 0;\n";
 
 	if ( redFsm->anyConditions() )
-		out << "    let _widec: int;\n";
+		out << "    let _widec: " INT_TYPE ";\n";
 
 	if ( redFsm->anyToStateActions() || redFsm->anyRegActions() ||
 			redFsm->anyFromStateActions() )
 	{
 		out <<
-			"    let mut _acts: int;\n"
-			"    let mut _nacts: int;\n";
+			"    let mut _acts: " INT_TYPE ";\n"
+			"    let mut _nacts: " INT_TYPE ";\n";
 	}
 
 	out <<
-		"    let mut _keys: int;\n"
+		"    let mut _keys: " INT_TYPE ";\n"
 		"    let mut _goto_targ = 0;\n"
 		"\n";
-	
+
 	out <<
 		"    '_goto: loop {\n"
 		"        match _goto_targ {\n"
@@ -1093,8 +1095,8 @@ void RustTabCodeGen::writeExec()
 
 	if ( redFsm->anyFromStateActions() ) {
 		out <<
-			"            _acts = " << FSA() << "[" << vCS() << "] as int;\n"
-			"            _nacts = " << A() << "[_acts] as int;\n"
+			"            _acts = " << FSA() << "[" << vCS() << "] as " INT_TYPE ";\n"
+			"            _nacts = " << A() << "[_acts] as " INT_TYPE ";\n"
 			"            _acts += 1;\n"
 			"            while _nacts > 0 {\n"
 			"                _nacts -= 1;\n"
@@ -1114,8 +1116,8 @@ void RustTabCodeGen::writeExec()
 	LOCATE_TRANS();
 
 	if ( useIndicies )
-		out << "            _trans = " << I() << "[_trans] as int;\n";
-	
+		out << "            _trans = " << I() << "[_trans] as " INT_TYPE ";\n";
+
 	if ( redFsm->anyEofTrans() )
 		out <<
 			"            _goto_targ = " << _eof_trans << ";\n"
@@ -1127,14 +1129,14 @@ void RustTabCodeGen::writeExec()
 		out << "            _ps = " << vCS() << ";\n";
 
 	out <<
-		"            " << vCS() << " = " << TT() << "[_trans] as int;\n"
+		"            " << vCS() << " = " << TT() << "[_trans] as " INT_TYPE ";\n"
 		"\n";
 
 	if ( redFsm->anyRegActions() ) {
 		out <<
 			"            if " << TA() << "[_trans] != 0 {\n"
-			"                _acts = " <<  TA() << "[_trans] as int;\n"
-			"                _nacts = " << A() << "[_acts] as int;\n"
+			"                _acts = " <<  TA() << "[_trans] as " INT_TYPE ";\n"
+			"                _nacts = " << A() << "[_acts] as " INT_TYPE ";\n"
 			"                _acts += 1;\n"
 			"                while _nacts > 0 {\n"
 			"                    _nacts -= 1;\n"
@@ -1157,8 +1159,8 @@ void RustTabCodeGen::writeExec()
 
 	if ( redFsm->anyToStateActions() ) {
 		out <<
-			"          _acts = " << TSA() << "[" << vCS() << "] as int;\n"
-			"          _nacts = " << A() << "[_acts] as int;\n"
+			"          _acts = " << TSA() << "[" << vCS() << "] as " INT_TYPE ";\n"
+			"          _nacts = " << A() << "[_acts] as " INT_TYPE ";\n"
 			"          _acts += 1;\n"
 			"          while _nacts > 0 {\n"
 			"              _nacts -= 1;\n"
@@ -1208,7 +1210,7 @@ void RustTabCodeGen::writeExec()
 		if ( redFsm->anyEofTrans() ) {
 			out <<
 				"                if " << ET() << "[" << vCS() << "] > 0 {\n"
-				"                    _trans = (" << ET() << "[" << vCS() << "] - 1) as int;\n"
+				"                    _trans = (" << ET() << "[" << vCS() << "] - 1) as " INT_TYPE ";\n"
 				"                    _goto_targ = " << _eof_trans << ";\n"
 				"                    continue '_goto;\n"
 				"                }\n";
@@ -1216,8 +1218,8 @@ void RustTabCodeGen::writeExec()
 
 		if ( redFsm->anyEofActions() ) {
 			out <<
-				"                let mut __acts = " << EA() << "[" << vCS() << "]" << " as int;\n"
-				"                let mut __nacts = " << A() << "[__acts] as int;\n"
+				"                let mut __acts = " << EA() << "[" << vCS() << "]" << " as " INT_TYPE ";\n"
+				"                let mut __nacts = " << A() << "[__acts] as " INT_TYPE ";\n"
 				"                __acts += 1;\n"
 				"                while __nacts > 0 {\n"
 				"                    __nacts -= 1;\n"
@@ -1271,7 +1273,7 @@ std::ostream &RustTabCodeGen::ARRAY_ITEM( string item, bool last )
 	item_count++;
 
 	out << setw(5) << setiosflags(ios::right) << item;
-	
+
 	if ( !last ) {
 		if (item_count % IALL == 0) {
 			out << ",\n";
@@ -1685,7 +1687,7 @@ void RustTabCodeGen::writeInit()
 
 	if ( !noCS )
 		out << "        " << vCS() << " = " << START() << ";\n";
-	
+
 	/* If there are any calls, then the stack top needs initialization. */
 	if ( redFsm->anyActionCalls() || redFsm->anyActionRets() )
 		out << "        " << TOP() << " = 0;\n";
@@ -1707,14 +1709,14 @@ void RustTabCodeGen::finishRagelDef()
 
 	/* Choose default transitions and the single transition. */
 	redFsm->chooseDefaultSpan();
-		
+
 	/* Maybe do flat expand, otherwise choose single. */
 	redFsm->chooseSingle();
 
 	/* If any errors have occured in the input file then don't write anything. */
 	if ( gblErrorCount > 0 )
 		return;
-	
+
 	/* Anlayze Machine will find the final action reference counts, among
 	 * other things. We will use these in reporting the usage
 	 * of fsm directives in action code. */
